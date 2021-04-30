@@ -16,8 +16,7 @@ class DefaultAuthorizationPostListener
     /**
      * Determine if we have an authorization failure, and, if so, return a 403 response
      *
-     * @param MvcAuthEvent $mvcAuthEvent
-     * @return null|\Laminas\Http\Response
+     * @return null|HttpResponse
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent)
     {
@@ -26,7 +25,7 @@ class DefaultAuthorizationPostListener
 
         if ($mvcAuthEvent->isAuthorized()) {
             if ($response instanceof HttpResponse) {
-                if ($response->getStatusCode() != 200) {
+                if ($response->getStatusCode() !== 200) {
                     $response->setStatusCode(200);
                 }
             }

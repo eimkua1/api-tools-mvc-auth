@@ -2,8 +2,8 @@
 
 namespace LaminasTest\ApiTools\MvcAuth\Authorization;
 
+use Laminas\ApiTools\MvcAuth\Authorization\AbstractAclAuthorizationFactory;
 use Laminas\ApiTools\MvcAuth\Authorization\AclAuthorization;
-use Laminas\ApiTools\MvcAuth\Authorization\AclAuthorizationFactory;
 use Laminas\Permissions\Acl\Acl;
 use PHPUnit\Framework\TestCase;
 
@@ -13,20 +13,20 @@ class AclAuthorizationFactoryTest extends TestCase
     {
         $config = [
             [
-                'resource' => 'LaminasCon\V1\Rest\Session\Controller::collection',
+                'resource'   => 'LaminasCon\V1\Rest\Session\Controller::collection',
                 'privileges' => ['POST'],
             ],
             [
-                'resource' => 'LaminasCon\V1\Rest\Session\Controller::entity',
+                'resource'   => 'LaminasCon\V1\Rest\Session\Controller::entity',
                 'privileges' => ['PATCH', 'DELETE'],
             ],
             [
-                'resource' => 'LaminasCon\V1\Rpc\Message\Controller::message',
+                'resource'   => 'LaminasCon\V1\Rpc\Message\Controller::message',
                 'privileges' => ['POST'],
             ],
         ];
 
-        $acl = AclAuthorizationFactory::factory($config);
+        $acl = AbstractAclAuthorizationFactory::factory($config);
 
         $this->assertInstanceOf(AclAuthorization::class, $acl);
         $this->assertInstanceOf(Acl::class, $acl);
@@ -62,20 +62,20 @@ class AclAuthorizationFactoryTest extends TestCase
         $config = [
             'deny_by_default' => true,
             [
-                'resource' => 'LaminasCon\V1\Rest\Session\Controller::collection',
+                'resource'   => 'LaminasCon\V1\Rest\Session\Controller::collection',
                 'privileges' => ['GET'],
             ],
             [
-                'resource' => 'LaminasCon\V1\Rest\Session\Controller::entity',
+                'resource'   => 'LaminasCon\V1\Rest\Session\Controller::entity',
                 'privileges' => ['GET'],
             ],
             [
-                'resource' => 'LaminasCon\V1\Rpc\Message\Controller::message',
+                'resource'   => 'LaminasCon\V1\Rpc\Message\Controller::message',
                 'privileges' => ['GET'],
             ],
         ];
 
-        $acl = AclAuthorizationFactory::factory($config);
+        $acl = AbstractAclAuthorizationFactory::factory($config);
 
         $this->assertInstanceOf(AclAuthorization::class, $acl);
         $this->assertInstanceOf(Acl::class, $acl);

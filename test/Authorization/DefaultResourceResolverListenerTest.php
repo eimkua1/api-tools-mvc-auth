@@ -8,13 +8,12 @@
 
 namespace LaminasTest\ApiTools\MvcAuth\Authorization;
 
+use Laminas\ApiTools\MvcAuth\Authorization\AuthorizationInterface;
 use Laminas\ApiTools\MvcAuth\Authorization\DefaultResourceResolverListener;
 use Laminas\ApiTools\MvcAuth\MvcAuthEvent;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\MvcEvent;
-use Laminas\Stdlib\Request;
-use Laminas\Stdlib\Response;
 use LaminasTest\ApiTools\MvcAuth\RouteMatchFactoryTrait;
 use LaminasTest\ApiTools\MvcAuth\TestAsset;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +22,7 @@ class DefaultResourceResolverListenerTest extends TestCase
 {
     use RouteMatchFactoryTrait;
 
-    public function setUp()
+    public function setUp(): void
     {
         $routeMatch = $this->createRouteMatch([]);
         $request    = new HttpRequest();
@@ -37,13 +36,16 @@ class DefaultResourceResolverListenerTest extends TestCase
         $this->restControllers = [
             'LaminasCon\V1\Rest\Session\Controller' => 'session_id',
         ];
-        $this->listener = new DefaultResourceResolverListener($this->restControllers);
+        $this->listener        = new DefaultResourceResolverListener($this->restControllers);
     }
 
+    /**
+     * @return MvcAuthEvent
+     */
     public function createMvcAuthEvent(MvcEvent $mvcEvent)
     {
         $this->authentication = new TestAsset\AuthenticationService();
-        $this->authorization  = $this->getMockBuilder('Laminas\ApiTools\MvcAuth\Authorization\AuthorizationInterface')
+        $this->authorization  = $this->getMockBuilder(AuthorizationInterface::class)
             ->getMock();
         return new MvcAuthEvent($mvcEvent, $this->authentication, $this->authorization);
     }
@@ -63,7 +65,7 @@ class DefaultResourceResolverListenerTest extends TestCase
         $routeMatch->setParam('controller', 'LaminasCon\V1\Rest\Session\Controller');
         $routeMatch->setParam('action', 'foo');
         $routeMatch->setParam('session_id', '0');
-        $request    = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         $this->assertEquals(
             'LaminasCon\V1\Rest\Session\Controller::entity',
             $this->listener->buildResourceString($routeMatch, $request)
@@ -76,7 +78,7 @@ class DefaultResourceResolverListenerTest extends TestCase
         $routeMatch = $mvcEvent->getRouteMatch();
         $routeMatch->setParam('controller', 'Foo\Bar\Controller');
         $routeMatch->setParam('action', 'foo');
-        $request    = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         $this->assertEquals('Foo\Bar\Controller::foo', $this->listener->buildResourceString($routeMatch, $request));
     }
 
@@ -85,7 +87,7 @@ class DefaultResourceResolverListenerTest extends TestCase
         $mvcEvent   = $this->mvcAuthEvent->getMvcEvent();
         $routeMatch = $mvcEvent->getRouteMatch();
         $routeMatch->setParam('controller', 'LaminasCon\V1\Rest\Session\Controller');
-        $request    = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         $this->assertEquals(
             'LaminasCon\V1\Rest\Session\Controller::collection',
             $this->listener->buildResourceString($routeMatch, $request)
@@ -98,7 +100,7 @@ class DefaultResourceResolverListenerTest extends TestCase
         $routeMatch = $mvcEvent->getRouteMatch();
         $routeMatch->setParam('controller', 'LaminasCon\V1\Rest\Session\Controller');
         $routeMatch->setParam('session_id', 'foo');
-        $request    = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         $this->assertEquals(
             'LaminasCon\V1\Rest\Session\Controller::entity',
             $this->listener->buildResourceString($routeMatch, $request)
@@ -110,7 +112,7 @@ class DefaultResourceResolverListenerTest extends TestCase
         $mvcEvent   = $this->mvcAuthEvent->getMvcEvent();
         $routeMatch = $mvcEvent->getRouteMatch();
         $routeMatch->setParam('controller', 'LaminasCon\V1\Rest\Session\Controller');
-        $request    = $mvcEvent->getRequest();
+        $request = $mvcEvent->getRequest();
         $request->getQuery()->set('session_id', 'bar');
         $this->assertEquals(
             'LaminasCon\V1\Rest\Session\Controller::entity',

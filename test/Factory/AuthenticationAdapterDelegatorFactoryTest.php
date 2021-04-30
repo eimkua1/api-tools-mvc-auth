@@ -18,16 +18,12 @@ use PHPUnit\Framework\TestCase;
 
 class AuthenticationAdapterDelegatorFactoryTest extends TestCase
 {
-    /**
-     * @var AuthenticationAdapterDelegatorFactory
-     */
+    /** @var AuthenticationAdapterDelegatorFactory */
     private $factory;
-    /**
-     * @var ServiceManager
-     */
+    /** @var ServiceManager */
     private $services;
 
-    public function setUp()
+    public function setUp(): void
     {
         // Actual service manager instance, as multiple services may be
         // requested; simplifies testing.
@@ -55,13 +51,12 @@ class AuthenticationAdapterDelegatorFactoryTest extends TestCase
         $this->assertEquals([], $listener->getAuthenticationTypes());
     }
 
-
     public function testReturnsListenerWithConfiguredAdapters()
     {
         $config = [
             // ensure top-level api-tools-oauth2 are available
-            'api-tools-oauth2' => [
-                'grant_types' => [
+            'api-tools-oauth2'   => [
+                'grant_types'                => [
                     'client_credentials' => true,
                     'authorization_code' => true,
                     'password'           => true,
@@ -77,15 +72,15 @@ class AuthenticationAdapterDelegatorFactoryTest extends TestCase
                             'adapter' => HttpAdapter::class,
                             'options' => [
                                 'accept_schemes' => ['basic'],
-                                'realm' => 'api',
-                                'htpasswd' => __DIR__ . '/../TestAsset/htpasswd',
+                                'realm'          => 'api',
+                                'htpasswd'       => __DIR__ . '/../TestAsset/htpasswd',
                             ],
                         ],
                         'bar' => [
                             'adapter' => OAuth2Adapter::class,
                             'storage' => [
                                 'adapter' => 'pdo',
-                                'dsn' => 'sqlite::memory:',
+                                'dsn'     => 'sqlite::memory:',
                             ],
                         ],
                         'baz' => [
@@ -114,7 +109,7 @@ class AuthenticationAdapterDelegatorFactoryTest extends TestCase
         $this->assertSame($this->listener, $listener);
         $this->assertEquals([
             'foo-basic',
-            'bar'
+            'bar',
         ], $listener->getAuthenticationTypes());
     }
 }

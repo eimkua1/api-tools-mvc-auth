@@ -19,12 +19,11 @@ class AuthenticationServiceFactory implements FactoryInterface
     /**
      * Create and return an AuthenticationService instance.
      *
-     * @param ContainerInterface $container
      * @param string $requestedName
      * @param null|array $options
      * @return AuthenticationService
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         return new AuthenticationService($container->get(NonPersistent::class));
     }
@@ -34,7 +33,6 @@ class AuthenticationServiceFactory implements FactoryInterface
      *
      * Provided for backwards compatibility; proxies to __invoke().
      *
-     * @param ServiceLocatorInterface $container
      * @return AuthenticationService
      */
     public function createService(ServiceLocatorInterface $container)

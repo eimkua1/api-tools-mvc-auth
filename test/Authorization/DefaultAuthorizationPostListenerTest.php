@@ -19,16 +19,19 @@ use PHPUnit\Framework\TestCase;
 
 class DefaultAuthorizationPostListenerTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
-        $response   = new HttpResponse();
-        $mvcEvent   = new MvcEvent();
+        $response = new HttpResponse();
+        $mvcEvent = new MvcEvent();
         $mvcEvent->setResponse($response);
         $this->mvcAuthEvent = $this->createMvcAuthEvent($mvcEvent);
 
         $this->listener = new DefaultAuthorizationPostListener();
     }
 
+    /**
+     * @return MvcAuthEvent
+     */
     public function createMvcAuthEvent(MvcEvent $mvcEvent)
     {
         $this->authentication = new TestAsset\AuthenticationService();
@@ -56,7 +59,7 @@ class DefaultAuthorizationPostListenerTest extends TestCase
     public function testReturnsComposedEventResponseWhenNotAuthorizedButNotAnHttpResponse()
     {
         $listener = $this->listener;
-        $response = new Response;
+        $response = new Response();
         $this->mvcAuthEvent->getMvcEvent()->setResponse($response);
         $this->assertSame($response, $listener($this->mvcAuthEvent));
     }

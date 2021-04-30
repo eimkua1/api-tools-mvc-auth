@@ -21,7 +21,6 @@ class AclAuthorization extends Acl implements AuthorizationInterface
      *
      * If the resource does not exist, adds it, the proxies to isAllowed().
      *
-     * @param IdentityInterface $identity
      * @param mixed $resource
      * @param mixed $privilege
      * @return bool

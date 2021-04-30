@@ -13,12 +13,17 @@ use Laminas\ApiTools\MvcAuth\MvcAuthEvent;
 use Laminas\Http\Request;
 use Laminas\Mvc\Router\RouteMatch as V2RouteMatch;
 use Laminas\Router\RouteMatch;
+use Laminas\Stdlib\RequestInterface;
+
+use function array_key_exists;
+use function get_class;
+use function gettype;
+use function is_object;
+use function sprintf;
 
 class DefaultResourceResolverListener
 {
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $restControllers;
 
     /**
@@ -42,8 +47,6 @@ class DefaultResourceResolverListener
      * matches.
      *
      * Once created, it is injected into the $mvcAuthEvent.
-     *
-     * @param MvcAuthEvent $mvcAuthEvent
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent)
     {
@@ -74,7 +77,7 @@ class DefaultResourceResolverListener
      * If it cannot resolve a controller service name, boolean false is returned.
      *
      * @param RouteMatch|V2RouteMatch $routeMatch
-     * @param \Laminas\Stdlib\RequestInterface $request
+     * @param RequestInterface $request
      * @return false|string
      */
     public function buildResourceString($routeMatch, $request)
@@ -85,7 +88,7 @@ class DefaultResourceResolverListener
                 __METHOD__,
                 RouteMatch::class,
                 V2RouteMatch::class,
-                (is_object($routeMatch) ? get_class($routeMatch) : gettype($routeMatch))
+                is_object($routeMatch) ? get_class($routeMatch) : gettype($routeMatch)
             ));
         }
 
@@ -107,7 +110,7 @@ class DefaultResourceResolverListener
         //     resource or a controller. The way to determine that is if we have
         //     an identifier. We find that info from the route parameters.
         $identifierName = $this->restControllers[$controller];
-        $id = $this->getIdentifier($identifierName, $routeMatch, $request);
+        $id             = $this->getIdentifier($identifierName, $routeMatch, $request);
         if ($id !== false) {
             return sprintf('%s::entity', $controller);
         }
@@ -122,7 +125,7 @@ class DefaultResourceResolverListener
      *
      * @param string $identifierName
      * @param RouteMatch|V2RouteMatch $routeMatch Validated by calling method.
-     * @param \Laminas\Stdlib\RequestInterface $request
+     * @param RequestInterface $request
      * @return false|mixed
      */
     protected function getIdentifier($identifierName, $routeMatch, $request)

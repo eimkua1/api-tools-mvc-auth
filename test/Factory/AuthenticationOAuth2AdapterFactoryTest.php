@@ -16,12 +16,14 @@ use PHPUnit\Framework\TestCase;
 
 class AuthenticationOAuth2AdapterFactoryTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->services = $this->getMockBuilder(ServiceLocatorInterface::class)->getMock();
     }
 
-
+    /**
+     * @return array
+     */
     public function invalidConfiguration()
     {
         return [
@@ -51,7 +53,7 @@ class AuthenticationOAuth2AdapterFactoryTest extends TestCase
             'adapter' => 'pdo',
             'storage' => [
                 'adapter' => 'pdo',
-                'dsn' => 'sqlite::memory:',
+                'dsn'     => 'sqlite::memory:',
             ],
         ];
 
@@ -60,7 +62,7 @@ class AuthenticationOAuth2AdapterFactoryTest extends TestCase
             ->with($this->stringContains('Config'))
             ->will($this->returnValue([
                 'api-tools-oauth2' => [
-                    'grant_types' => [
+                    'grant_types'                => [
                         'client_credentials' => true,
                         'authorization_code' => true,
                         'password'           => true,

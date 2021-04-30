@@ -10,25 +10,28 @@ namespace LaminasTest\ApiTools\MvcAuth\Factory;
 
 use Laminas\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Laminas\ApiTools\MvcAuth\Factory\NamedOAuth2ServerFactory;
-use Laminas\ApiTools\MvcAuth\Factory\OAuth2ServerFactory;
 use Laminas\ServiceManager\ServiceManager;
 use OAuth2\Storage\Memory as MemoryStorage;
 use PHPUnit\Framework\TestCase;
 
 class NamedOAuth2ServerFactoryTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->services = $this->setUpConfig(new ServiceManager());
         $this->factory  = new NamedOAuth2ServerFactory();
     }
 
+    /**
+     * @param ServiceManager $services
+     * @return ServiceManager
+     */
     public function setUpConfig($services)
     {
         $services->setService('config', [
-            'api-tools-oauth2' => [
-                'storage' => 'LaminasTest\ApiTools\OAuth2\TestAsset\MockAdapter',
-                'grant_types' => [
+            'api-tools-oauth2'   => [
+                'storage'                    => 'LaminasTest\ApiTools\OAuth2\TestAsset\MockAdapter',
+                'grant_types'                => [
                     'client_credentials' => true,
                     'authorization_code' => true,
                     'password'           => true,
@@ -40,7 +43,7 @@ class NamedOAuth2ServerFactoryTest extends TestCase
             'api-tools-mvc-auth' => [
                 'authentication' => [
                     'adapters' => [
-                        'test' => [
+                        'test'  => [
                             'adapter' => OAuth2Adapter::class,
                             'storage' => [
                                 'storage' => 'LaminasTest\ApiTools\OAuth2\TestAsset\MockAdapter',

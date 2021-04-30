@@ -11,7 +11,6 @@ namespace LaminasTest\ApiTools\MvcAuth\Factory;
 use Laminas\ApiTools\MvcAuth\ApacheResolver;
 use Laminas\ApiTools\MvcAuth\Authentication\AuthHttpAdapter;
 use Laminas\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
-use Laminas\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Laminas\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Laminas\ApiTools\MvcAuth\Factory;
 use Laminas\ApiTools\MvcAuth\FileResolver;
@@ -22,20 +21,26 @@ use Laminas\ServiceManager\ServiceManager;
 use OAuth2\Server as OAuth2Server;
 use OAuth2\Storage\Pdo as PdoStorage;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use ReflectionProperty;
+
+use function array_shift;
 
 class DefaultAuthenticationListenerFactoryTest extends TestCase
 {
+    /** @var Factory\DefaultAuthenticationListenerFactory  */
     private $factory;
+
+    /** @var ServiceManager  */
     private $services;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->services = new ServiceManager();
         $this->services->setFactory(AuthHttpAdapter::class, Factory\DefaultAuthHttpAdapterFactory::class);
         $this->services->setFactory(ApacheResolver::class, Factory\ApacheResolverFactory::class);
         $this->services->setFactory(FileResolver::class, Factory\FileResolverFactory::class);
-        $this->factory  = new Factory\DefaultAuthenticationListenerFactory();
+        $this->factory = new Factory\DefaultAuthenticationListenerFactory();
     }
 
     public function testCreatingOAuth2ServerFromStorageService()
@@ -45,8 +50,8 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
         $this->services->setService('TestAdapter', $adapter);
         $this->services->setService('config', [
             'api-tools-oauth2' => [
-                'storage' => 'TestAdapter',
-                'grant_types' => [
+                'storage'                    => 'TestAdapter',
+                'grant_types'                => [
                     'client_credentials' => true,
                     'authorization_code' => true,
                     'password'           => true,
@@ -54,14 +59,17 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
                     'jwt'                => true,
                 ],
                 'api_problem_error_response' => true,
-            ]
+            ],
         ]);
 
         $factory = $this->factory;
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithNoConfigServiceReturnsListenerWithNoHttpAdapter()
@@ -70,7 +78,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithConfigMissingMvcAuthSectionReturnsListenerWithNoHttpAdapter()
@@ -80,7 +91,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithConfigMissingAuthenticationSubSectionReturnsListenerWithNoHttpAdapter()
@@ -90,7 +104,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithConfigMissingHttpSubSubSectionReturnsListenerWithNoHttpAdapter()
@@ -100,7 +117,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithConfigMissingAcceptSchemesRaisesException()
@@ -130,17 +150,19 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
                 'authentication' => [
                     'http' => [
                         'accept_schemes' => ['basic'],
-                        'realm' => 'test',
+                        'realm'          => 'test',
                     ],
                 ],
             ],
         ]);
         $factory = $this->factory;
 
-
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithDigestSchemeButMissingHtdigestValueReturnsListenerWithNoHttpAdapter()
@@ -150,9 +172,9 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
                 'authentication' => [
                     'http' => [
                         'accept_schemes' => ['digest'],
-                        'realm' => 'test',
+                        'realm'          => 'test',
                         'digest_domains' => '/',
-                        'nonce_timeout' => 3600,
+                        'nonce_timeout'  => 3600,
                     ],
                 ],
             ],
@@ -161,7 +183,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeNotInstanceOf(HttpBasic::class, 'httpAdapter', $listener);
+
+        $httpAdapter = $this->getHttpAdapter($listener);
+
+        $this->assertNotInstanceOf(HttpBasic::class, $httpAdapter);
     }
 
     public function testCallingFactoryWithBasicSchemeAndHtpasswdValueReturnsListenerWithHttpAdapter()
@@ -173,10 +198,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
                 'authentication' => [
                     'http' => [
                         'accept_schemes' => ['basic'],
-                        'realm' => 'My Web Site',
+                        'realm'          => 'My Web Site',
                         'digest_domains' => '/',
-                        'nonce_timeout' => 3600,
-                        'htpasswd' => __DIR__ . '/../TestAsset/htpasswd'
+                        'nonce_timeout'  => 3600,
+                        'htpasswd'       => __DIR__ . '/../TestAsset/htpasswd',
                     ],
                 ],
             ],
@@ -197,10 +222,10 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
                 'authentication' => [
                     'http' => [
                         'accept_schemes' => ['digest'],
-                        'realm' => 'User Area',
+                        'realm'          => 'User Area',
                         'digest_domains' => '/',
-                        'nonce_timeout' => 3600,
-                        'htdigest' => __DIR__ . '/../TestAsset/htdigest'
+                        'nonce_timeout'  => 3600,
+                        'htdigest'       => __DIR__ . '/../TestAsset/htdigest',
                     ],
                 ],
             ],
@@ -219,12 +244,12 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
         $this->services->setService('config', [
             'api-tools-mvc-auth' => [
                 'authentication' => [
-                    'http' => [
+                    'http'  => [
                         'accept_schemes' => ['digest'],
-                        'realm' => 'User Area',
+                        'realm'          => 'User Area',
                         'digest_domains' => '/',
-                        'nonce_timeout' => 3600,
-                        'htdigest' => __DIR__ . '/../TestAsset/htdigest'
+                        'nonce_timeout'  => 3600,
+                        'htdigest'       => __DIR__ . '/../TestAsset/htdigest',
                     ],
                     'types' => [
                         'token',
@@ -254,8 +279,8 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
         $this->services->setService('TestAdapter', $adapter);
         $this->services->setService('config', [
             'api-tools-oauth2' => [
-                'storage' => 'TestAdapter'
-            ]
+                'storage' => 'TestAdapter',
+            ],
         ]);
 
         $factory = $this->factory;
@@ -266,9 +291,14 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
         $r = new ReflectionProperty($listener, 'adapters');
         $r->setAccessible(true);
         $adapters = $r->getValue($listener);
-        $adapter = array_shift($adapters);
+        $adapter  = array_shift($adapters);
         $this->assertInstanceOf(OAuth2Adapter::class, $adapter);
-        $this->assertAttributeSame($oauth2Server, 'oauth2Server', $adapter);
+
+        $oauth2ServerProperty = new ReflectionProperty($adapter, 'oauth2Server');
+        $oauth2ServerProperty->setAccessible(true);
+        $actualOauth2Server = $oauth2ServerProperty->getValue($adapter);
+
+        $this->assertSame($oauth2Server, $actualOauth2Server);
     }
 
     public function testCallingFactoryWithAuthenticationMapReturnsListenerComposingMap()
@@ -288,6 +318,23 @@ class DefaultAuthenticationListenerFactoryTest extends TestCase
 
         $listener = $factory($this->services, 'DefaultAuthenticationListener');
         $this->assertInstanceOf(DefaultAuthenticationListener::class, $listener);
-        $this->assertAttributeEquals(['Testing\V1' => 'oauth2'], 'authMap', $listener);
+
+        $authMapProperty = new ReflectionProperty($listener, 'authMap');
+        $authMapProperty->setAccessible(true);
+        $actualAuthMap = $authMapProperty->getValue($listener);
+
+        $this->assertSame(['Testing\V1' => 'oauth2'], $actualAuthMap);
+    }
+
+    /**
+     * @return mixed
+     * @throws ReflectionException
+     */
+    private function getHttpAdapter(DefaultAuthenticationListener $listener)
+    {
+        $httpAdapterProperty = new ReflectionProperty($listener, 'httpAdapter');
+        $httpAdapterProperty->setAccessible(true);
+
+        return $httpAdapterProperty->getValue($listener);
     }
 }

@@ -15,11 +15,14 @@ use Laminas\Authentication\AuthenticationServiceInterface;
 use Laminas\Http\Request;
 use Laminas\Http\Response;
 
+use function array_shift;
+use function in_array;
+use function is_array;
+use function is_string;
+
 class HttpAdapter extends AbstractAdapter
 {
-    /**
-     * @var AuthenticationServiceInterface
-     */
+    /** @var AuthenticationServiceInterface */
     private $authenticationService;
 
     /**
@@ -29,9 +32,7 @@ class HttpAdapter extends AbstractAdapter
      */
     protected $authorizationTokenTypes = ['basic', 'digest'];
 
-    /**
-     * @var HttpAuth
-     */
+    /** @var HttpAuth */
     private $httpAuth;
 
     /**
@@ -42,8 +43,6 @@ class HttpAdapter extends AbstractAdapter
     private $providesBase;
 
     /**
-     * @param HttpAuth $httpAuth
-     * @param AuthenticationServiceInterface $authenticationService
      * @param null|string $providesBase
      */
     public function __construct(
@@ -51,7 +50,7 @@ class HttpAdapter extends AbstractAdapter
         AuthenticationServiceInterface $authenticationService,
         $providesBase = null
     ) {
-        $this->httpAuth = $httpAuth;
+        $this->httpAuth              = $httpAuth;
         $this->authenticationService = $authenticationService;
 
         if (is_string($providesBase) && ! empty($providesBase)) {
@@ -93,16 +92,13 @@ class HttpAdapter extends AbstractAdapter
      */
     public function matches($type)
     {
-        return ($this->providesBase === $type || in_array($type, $this->provides(), true));
+        return $this->providesBase === $type || in_array($type, $this->provides(), true);
     }
 
     /**
      * Perform pre-flight authentication operations.
      *
      * If invoked, issues a client challenge.
-     *
-     * @param Request $request
-     * @param Response $response
      */
     public function preAuth(Request $request, Response $response)
     {
@@ -114,9 +110,6 @@ class HttpAdapter extends AbstractAdapter
     /**
      * Attempt to authenticate the current request.
      *
-     * @param Request $request
-     * @param Response $response
-     * @param MvcAuthEvent $mvcAuthEvent
      * @return false|Identity\IdentityInterface False on failure, IdentityInterface
      *     otherwise
      */
@@ -145,9 +138,7 @@ class HttpAdapter extends AbstractAdapter
         // But determine the name separately
         $name = $resultIdentity;
         if (is_array($resultIdentity)) {
-            $name = isset($resultIdentity['username'])
-                ? $resultIdentity['username']
-                : (string) array_shift($resultIdentity);
+            $name = $resultIdentity['username'] ?? (string) array_shift($resultIdentity);
         }
         $identity->setName($name);
 

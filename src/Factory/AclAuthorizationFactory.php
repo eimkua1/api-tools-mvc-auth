@@ -9,20 +9,24 @@
 namespace Laminas\ApiTools\MvcAuth\Factory;
 
 use Interop\Container\ContainerInterface;
+use Laminas\ApiTools\MvcAuth\Authorization\AbstractAclAuthorizationFactory as AclFactory;
 use Laminas\ApiTools\MvcAuth\Authorization\AclAuthorization;
-use Laminas\ApiTools\MvcAuth\Authorization\AclAuthorizationFactory as AclFactory;
 use Laminas\Http\Request;
 use Laminas\ServiceManager\FactoryInterface;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+
+use function array_key_exists;
+use function array_keys;
+use function lcfirst;
+use function sprintf;
+use function strtr;
 
 /**
  * Factory for creating an AclAuthorization instance from configuration
  */
 class AclAuthorizationFactory implements FactoryInterface
 {
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $httpMethods = [
         Request::METHOD_DELETE => true,
         Request::METHOD_GET    => true,
@@ -34,12 +38,11 @@ class AclAuthorizationFactory implements FactoryInterface
     /**
      * Create and return an AclAuthorization instance.
      *
-     * @param ContainerInterface $container
      * @param string $requestedName
      * @param null|array $options
      * @return AclAuthorization
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         $config = $this->getConfigFromContainer($container);
         return $this->createAclFromConfig($config);
@@ -102,7 +105,7 @@ class AclAuthorizationFactory implements FactoryInterface
         $controllerService = strtr($controllerService, '-', '\\');
         if (isset($privileges['actions'])) {
             foreach ($privileges['actions'] as $action => $methods) {
-                $action = lcfirst($action);
+                $action      = lcfirst($action);
                 $aclConfig[] = [
                     'resource'   => sprintf('%s::%s', $controllerService, $action),
                     'privileges' => $this->createPrivilegesFromMethods($methods, $denyByDefault),
@@ -145,7 +148,8 @@ class AclAuthorizationFactory implements FactoryInterface
             // If the flag evaluates true and we're denying by default, OR
             // if the flag evaluates false and we're allowing by default,
             // THEN no rule needs to be added
-            if (( $denyByDefault && $flag)
+            if (
+                ( $denyByDefault && $flag)
                 || (! $denyByDefault && ! $flag)
             ) {
                 if (isset($privileges[$method])) {
@@ -171,7 +175,6 @@ class AclAuthorizationFactory implements FactoryInterface
      * Attempts to pull the 'config' service, and, further, the
      * api-tools-mvc-auth.authorization segment.
      *
-     * @param ContainerInterface $container
      * @return array
      */
     private function getConfigFromContainer(ContainerInterface $container)

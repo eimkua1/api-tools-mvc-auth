@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 
 class AuthenticationHttpAdapterFactoryTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->services = $this->getMockBuilder(ServiceLocatorInterface::class)->getMock();
     }
@@ -34,6 +34,9 @@ class AuthenticationHttpAdapterFactoryTest extends TestCase
         AuthenticationHttpAdapterFactory::factory('foo', [], $this->services);
     }
 
+    /**
+     * @return array
+     */
     public function invalidConfiguration()
     {
         return [
@@ -48,6 +51,7 @@ class AuthenticationHttpAdapterFactoryTest extends TestCase
     }
 
     /**
+     * @param array $config
      * @dataProvider invalidConfiguration
      */
     public function testRaisesExceptionIfMissingConfigurationOptions($config)
@@ -62,29 +66,41 @@ class AuthenticationHttpAdapterFactoryTest extends TestCase
         AuthenticationHttpAdapterFactory::factory('foo', $config, $this->services);
     }
 
+    /**
+     * @return array[]
+     */
     public function validConfiguration()
     {
         return [
-            'basic' => [[
-                'accept_schemes' => ['basic'],
-                'realm' => 'api',
-                'htpasswd' => __DIR__ . '/../TestAsset/htpasswd',
-            ], ['foo-basic']],
-            'digest' => [[
-                'accept_schemes' => ['digest'],
-                'realm' => 'api',
-                'digest_domains' => 'https://example.com',
-                'nonce_timeout' => 3600,
-                'htdigest' => __DIR__ . '/../TestAsset/htdigest',
-            ], ['foo-digest']],
-            'both' => [[
-                'accept_schemes' => ['basic', 'digest'],
-                'realm' => 'api',
-                'digest_domains' => 'https://example.com',
-                'nonce_timeout' => 3600,
-                'htpasswd' => __DIR__ . '/../TestAsset/htpasswd',
-                'htdigest' => __DIR__ . '/../TestAsset/htdigest',
-            ], ['foo-basic', 'foo-digest']],
+            'basic'  => [
+                [
+                    'accept_schemes' => ['basic'],
+                    'realm'          => 'api',
+                    'htpasswd'       => __DIR__ . '/../TestAsset/htpasswd',
+                ],
+                ['foo-basic'],
+            ],
+            'digest' => [
+                [
+                    'accept_schemes' => ['digest'],
+                    'realm'          => 'api',
+                    'digest_domains' => 'https://example.com',
+                    'nonce_timeout'  => 3600,
+                    'htdigest'       => __DIR__ . '/../TestAsset/htdigest',
+                ],
+                ['foo-digest'],
+            ],
+            'both'   => [
+                [
+                    'accept_schemes' => ['basic', 'digest'],
+                    'realm'          => 'api',
+                    'digest_domains' => 'https://example.com',
+                    'nonce_timeout'  => 3600,
+                    'htpasswd'       => __DIR__ . '/../TestAsset/htpasswd',
+                    'htdigest'       => __DIR__ . '/../TestAsset/htdigest',
+                ],
+                ['foo-basic', 'foo-digest'],
+            ],
         ];
     }
 

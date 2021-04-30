@@ -26,39 +26,31 @@ use LaminasTest\ApiTools\MvcAuth\TestAsset\AuthenticationService;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function array_shift;
+
 class DefaultAuthorizationListenerTest extends TestCase
 {
     use RouteMatchFactoryTrait;
 
-    /**
-     * @var AuthenticationService
-     */
+    /** @var AuthenticationService */
     protected $authentication;
 
-    /**
-     * @var Acl
-     */
+    /** @var Acl */
     protected $authorization;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $restControllers = [];
 
-    /**
-     * @var DefaultAuthorizationListener
-     */
+    /** @var DefaultAuthorizationListener */
     protected $listener;
 
-    /**
-     * @var MvcAuthEvent
-     */
+    /** @var MvcAuthEvent */
     protected $mvcAuthEvent;
 
-    public function setUp()
+    public function setUp(): void
     {
         // authentication service
-        $this->authentication = new AuthenticationService;
+        $this->authentication = new AuthenticationService();
 
         // authorization service
         $this->authorization = new AclAuthorization();
@@ -71,17 +63,19 @@ class DefaultAuthorizationListenerTest extends TestCase
         $response   = new HttpResponse();
         $container  = new ServiceManager();
 
-        (new Config(['services' => [
-            'EventManager' => new EventManager(),
-            'Authentication' => $this->authentication,
-            'Authorization' => $this->authorization,
-            'Request' => $request,
-            'Response' => $response
-        ]]))->configureServiceManager($container);
+        (new Config([
+            'services' => [
+                'EventManager'   => new EventManager(),
+                'Authentication' => $this->authentication,
+                'Authorization'  => $this->authorization,
+                'Request'        => $request,
+                'Response'       => $response,
+            ],
+        ]))->configureServiceManager($container);
 
         $application = $this->applicationFactory($container);
 
-        $mvcEvent   = new MvcEvent();
+        $mvcEvent = new MvcEvent();
         $mvcEvent->setRequest($request)
             ->setResponse($response)
             ->setRouteMatch($routeMatch)
@@ -92,11 +86,14 @@ class DefaultAuthorizationListenerTest extends TestCase
         $this->listener = new DefaultAuthorizationListener($this->authorization);
     }
 
+    /**
+     * @return Application
+     */
     public function applicationFactory(ServiceManager $container)
     {
-        $r = new ReflectionMethod(Application::class, '__construct');
+        $r         = new ReflectionMethod(Application::class, '__construct');
         $arguments = $r->getParameters();
-        $first = array_shift($arguments);
+        $first     = array_shift($arguments);
 
         if ($first->getName() !== 'serviceManager') {
             // V2 construction
@@ -124,9 +121,9 @@ class DefaultAuthorizationListenerTest extends TestCase
     {
         $listener = $this->listener;
 
-        $request    = new HttpRequest();
-        $response   = new HttpResponse();
-        $mvcEvent   = new MvcEvent();
+        $request  = new HttpRequest();
+        $response = new HttpResponse();
+        $mvcEvent = new MvcEvent();
         $mvcEvent->setRequest($request)
             ->setResponse($response);
         $mvcAuthEvent = new MvcAuthEvent($mvcEvent, $this->authentication, $this->authorization);

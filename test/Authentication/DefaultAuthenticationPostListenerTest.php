@@ -20,16 +20,19 @@ use PHPUnit\Framework\TestCase;
 
 class DefaultAuthenticationPostListenerTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
-        $response   = new HttpResponse();
-        $mvcEvent   = new MvcEvent();
+        $response = new HttpResponse();
+        $mvcEvent = new MvcEvent();
         $mvcEvent->setResponse($response);
         $this->mvcAuthEvent = $this->createMvcAuthEvent($mvcEvent);
 
         $this->listener = new DefaultAuthenticationPostListener();
     }
 
+    /**
+     * @return MvcAuthEvent
+     */
     public function createMvcAuthEvent(MvcEvent $mvcEvent)
     {
         $this->authentication = new TestAsset\AuthenticationService();
@@ -54,7 +57,7 @@ class DefaultAuthenticationPostListenerTest extends TestCase
     {
         $listener = $this->listener;
         $this->mvcAuthEvent->setAuthenticationResult(new AuthenticationResult(0, 'foo'));
-        $response = new Response;
+        $response = new Response();
         $this->mvcAuthEvent->getMvcEvent()->setResponse($response);
         $this->assertSame($response, $listener($this->mvcAuthEvent));
     }

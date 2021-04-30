@@ -18,12 +18,11 @@ class FileResolverFactory implements FactoryInterface
     /**
      * Create and return a FileResolver instance, if configured.
      *
-     * @param ContainerInterface $container
      * @param string             $requestedName
      * @param null|array         $options
      * @return false|FileResolver
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         if (! $container->has('config')) {
             return false;
@@ -45,7 +44,6 @@ class FileResolverFactory implements FactoryInterface
      *
      * Provided for backwards compatibility; proxies to __invoke().
      *
-     * @param ServiceLocatorInterface $container
      * @return false|FileResolver
      */
     public function createService(ServiceLocatorInterface $container)

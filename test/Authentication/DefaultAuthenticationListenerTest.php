@@ -10,7 +10,6 @@ namespace LaminasTest\ApiTools\MvcAuth\Authentication;
 
 use Laminas\ApiTools\MvcAuth\Authentication\AdapterInterface;
 use Laminas\ApiTools\MvcAuth\Authentication\DefaultAuthenticationListener;
-use Laminas\ApiTools\MvcAuth\Authentication\HttpAdapter;
 use Laminas\ApiTools\MvcAuth\Authentication\OAuth2Adapter;
 use Laminas\ApiTools\MvcAuth\Authorization\AuthorizationInterface;
 use Laminas\ApiTools\MvcAuth\Identity\AuthenticatedIdentity;
@@ -20,58 +19,50 @@ use Laminas\Authentication\Adapter\Http as HttpAuth;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Authentication\Result as AuthenticationResult;
 use Laminas\Authentication\Storage\NonPersistent;
+use Laminas\Config\Config;
 use Laminas\Http\Header\HeaderInterface as HttpHeaderInterface;
 use Laminas\Http\Request as HttpRequest;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Stdlib\Request;
+use Laminas\Stdlib\RequestInterface;
 use LaminasTest\ApiTools\MvcAuth\RouteMatchFactoryTrait;
 use OAuth2\Request as OAuth2Request;
 use OAuth2\Server as OAuth2Server;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+
+use function array_merge;
 
 class DefaultAuthenticationListenerTest extends TestCase
 {
     use RouteMatchFactoryTrait;
 
-    /**
-     * @var HttpRequest
-     */
+    /** @var HttpRequest */
     protected $request;
 
-    /**
-     * @var HttpResponse
-     */
+    /** @var HttpResponse */
     protected $response;
 
-    /**
-     * @var AuthenticationService
-     */
+    /** @var AuthenticationService */
     protected $authentication;
 
+    /** @var AuthorizationInterface|MockObject  */
     protected $authorization;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $restControllers = [];
 
-    /**
-     * @var DefaultAuthenticationListener
-     */
+    /** @var DefaultAuthenticationListener */
     protected $listener;
 
-    /**
-     * @var MvcAuthEvent
-     */
+    /** @var MvcAuthEvent */
     protected $mvcAuthEvent;
 
-    /**
-     * @var \Laminas\Config\Config
-     */
+    /** @var Config */
     protected $configuration;
 
-    public function setUp()
+    public function setUp(): void
     {
         // authentication service
         $this->authentication = new AuthenticationService(new NonPersistent());
@@ -80,8 +71,8 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->authorization = $this->getMockBuilder(AuthorizationInterface::class)->getMock();
 
         // event for mvc and mvc-auth
-        $this->request    = new HttpRequest();
-        $this->response   = new HttpResponse();
+        $this->request  = new HttpRequest();
+        $this->response = new HttpResponse();
 
         $mvcEvent = new MvcEvent();
         $mvcEvent->setRequest($this->request)
@@ -101,9 +92,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -111,18 +102,21 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->listener->__invoke($this->mvcAuthEvent);
 
         $authHeaders = $this->response->getHeaders()->get('WWW-Authenticate');
-        $authHeader = $authHeaders[0];
+        $authHeader  = $authHeaders[0];
         $this->assertInstanceOf(HttpHeaderInterface::class, $authHeader);
         $this->assertEquals('Basic realm="My Web Site"', $authHeader->getFieldValue());
     }
 
+    /**
+     * @return array
+     */
     public function testInvokeForBasicAuthSetsIdentityWhenValid()
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -134,13 +128,16 @@ class DefaultAuthenticationListenerTest extends TestCase
         return ['identity' => $identity, 'mvc_event' => $this->mvcAuthEvent->getMvcEvent()];
     }
 
+    /**
+     * @return array
+     */
     public function testInvokeForBasicAuthSetsGuestIdentityWhenValid()
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -156,9 +153,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -172,9 +169,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'digest',
-            'realm' => 'User Area',
+            'realm'          => 'User Area',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setDigestResolver(new HttpAuth\FileResolver(__DIR__ . '/../TestAsset/htdigest'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -182,9 +179,9 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->listener->__invoke($this->mvcAuthEvent);
 
         $authHeaders = $this->response->getHeaders()->get('WWW-Authenticate');
-        $authHeader = $authHeaders[0];
+        $authHeader  = $authHeaders[0];
         $this->assertInstanceOf(HttpHeaderInterface::class, $authHeader);
-        $this->assertRegexp(
+        $this->assertMatchesRegularExpression(
             '#^Digest realm="User Area", domain="/", '
             . 'nonce="[a-f0-9]{32}", '
             . 'opaque="cbf8b7892feb4d4aaacecc4e4fb12f83", '
@@ -195,6 +192,7 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param array $params
      * @depends testInvokeForBasicAuthSetsIdentityWhenValid
      */
     public function testListenerInjectsDiscoveredIdentityIntoMvcEvent($params)
@@ -207,6 +205,7 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param array $params
      * @depends testInvokeForBasicAuthSetsGuestIdentityWhenValid
      */
     public function testListenerInjectsGuestIdentityIntoMvcEvent($params)
@@ -223,12 +222,12 @@ class DefaultAuthenticationListenerTest extends TestCase
      */
     public function testListenerPullsDigestUsernameFromAuthenticationIdentityWhenCreatingAuthenticatedIdentityInstance()
     {
-        $httpAuth = $this->getMockBuilder(HttpAuth::class)
+        $httpAuth       = $this->getMockBuilder(HttpAuth::class)
             ->disableOriginalConstructor()
             ->getMock();
         $resultIdentity = new AuthenticationResult(AuthenticationResult::SUCCESS, [
             'username' => 'user',
-            'realm' => 'User Area',
+            'realm'    => 'User Area',
         ]);
         $httpAuth->expects($this->any())
             ->method('getBasicResolver')
@@ -286,6 +285,9 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->assertIdentityMatchesToken($token, $identity);
     }
 
+    /**
+     * @return string[][]
+     */
     public function requestMethodsWithRequestBodies()
     {
         return [
@@ -297,6 +299,7 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param string $method
      * @dataProvider requestMethodsWithRequestBodies
      */
     public function testBodyAccessTokenProxiesOAuthServer($method)
@@ -315,6 +318,9 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->assertIdentityMatchesToken($token, $identity);
     }
 
+    /**
+     * @param array $token
+     */
     protected function setupMockOAuth2Server($token)
     {
         $server = $this->getMockBuilder(OAuth2Server::class)
@@ -328,6 +334,11 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->listener->setOauth2Server($server);
     }
 
+    /**
+     * @param array $token
+     * @param AuthenticatedIdentity $identity
+     * @param string $message
+     */
     public static function assertIdentityMatchesToken($token, $identity, $message = '')
     {
         self::assertInstanceOf(AuthenticatedIdentity::class, $identity, $message);
@@ -339,9 +350,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
         $this->listener->setHttpAdapter($httpAuth);
@@ -349,12 +360,12 @@ class DefaultAuthenticationListenerTest extends TestCase
 
     public function setupHttpDigestAuth()
     {
-        $httpAuth = $this->getMockBuilder(HttpAuth::class)
+        $httpAuth       = $this->getMockBuilder(HttpAuth::class)
             ->disableOriginalConstructor()
             ->getMock();
         $resultIdentity = new AuthenticationResult(AuthenticationResult::SUCCESS, [
             'username' => 'user',
-            'realm' => 'User Area',
+            'realm'    => 'User Area',
         ]);
         $httpAuth->expects($this->any())
             ->method('getDigestResolver')
@@ -366,6 +377,9 @@ class DefaultAuthenticationListenerTest extends TestCase
         $this->listener->setHttpAdapter($httpAuth);
     }
 
+    /**
+     * @return array[]
+     */
     public function mappedAuthenticationControllers()
     {
         return [
@@ -409,6 +423,11 @@ class DefaultAuthenticationListenerTest extends TestCase
         ];
     }
 
+    /**
+     * @param string $authType
+     * @param string $controller
+     * @param RequestInterface $request
+     */
     public function setupMappedAuthenticatingListener($authType, $controller, $request)
     {
         switch ($authType) {
@@ -439,6 +458,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param string $controller
+     * @param string $authType
+     * @param callable $requestProvider
      * @dataProvider mappedAuthenticationControllers
      * @group 55
      */
@@ -453,6 +475,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param string $controller
+     * @param string $authType
+     * @param callable $requestProvider
      * @dataProvider mappedAuthenticationControllers
      * @group 55
      */
@@ -477,6 +502,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param string $controller
+     * @param string $authType
+     * @param callable $requestProvider
      * @dataProvider mappedAuthenticationControllers
      * @group 55
      */
@@ -509,6 +537,9 @@ class DefaultAuthenticationListenerTest extends TestCase
     }
 
     /**
+     * @param string $controller
+     * @param string $authType
+     * @param callable $requestProvider
      * @dataProvider mappedAuthenticationControllers
      * @group 55
      */
@@ -563,7 +594,7 @@ class DefaultAuthenticationListenerTest extends TestCase
 
         $routeMatch = $this->createRouteMatch(['controller' => 'FooBarBaz\V4\Rest\Test\TestController']);
 
-        $mvcEvent   = $this->mvcAuthEvent->getMvcEvent();
+        $mvcEvent = $this->mvcAuthEvent->getMvcEvent();
         $mvcEvent
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
@@ -597,7 +628,7 @@ class DefaultAuthenticationListenerTest extends TestCase
 
         $routeMatch = $this->createRouteMatch(['controller' => 'Foo\V2\Rest\Test\TestController']);
 
-        $mvcEvent   = $this->mvcAuthEvent->getMvcEvent();
+        $mvcEvent = $this->mvcAuthEvent->getMvcEvent();
         $mvcEvent
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
@@ -608,7 +639,7 @@ class DefaultAuthenticationListenerTest extends TestCase
 
     public function testAllowsAttachingAdapters()
     {
-        $types = ['foo'];
+        $types   = ['foo'];
         $adapter = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -620,7 +651,7 @@ class DefaultAuthenticationListenerTest extends TestCase
 
     public function testCanRetrieveSupportedAuthenticationTypes()
     {
-        $types = ['foo'];
+        $types   = ['foo'];
         $adapter = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -646,7 +677,7 @@ class DefaultAuthenticationListenerTest extends TestCase
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
 
-        $types = ['foo'];
+        $types   = ['foo'];
         $adapter = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -683,7 +714,7 @@ class DefaultAuthenticationListenerTest extends TestCase
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
 
-        $types = ['oauth2'];
+        $types   = ['oauth2'];
         $adapter = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -726,7 +757,7 @@ class DefaultAuthenticationListenerTest extends TestCase
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
 
-        $types = ['oauth2'];
+        $types    = ['oauth2'];
         $adapter1 = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -776,7 +807,7 @@ class DefaultAuthenticationListenerTest extends TestCase
 
     public function testListsCombinedAuthenticationTypes()
     {
-        $types = ['foo'];
+        $types       = ['foo'];
         $customTypes = ['bar'];
         $this->listener->addAuthenticationTypes($customTypes);
 
@@ -827,7 +858,7 @@ class DefaultAuthenticationListenerTest extends TestCase
             ->setRequest($request)
             ->setRouteMatch($routeMatch);
 
-        $types = ['custom'];
+        $types   = ['custom'];
         $adapter = $this->getMockBuilder(AdapterInterface::class)
             ->disableOriginalConstructor()
             ->getMock();

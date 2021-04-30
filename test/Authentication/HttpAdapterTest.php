@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 
 class HttpAdapterTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         // authentication service
         $this->authentication = new AuthenticationService(new NonPersistent());
@@ -46,9 +46,9 @@ class HttpAdapterTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
 
@@ -61,9 +61,9 @@ class HttpAdapterTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
 
@@ -78,16 +78,16 @@ class HttpAdapterTest extends TestCase
     {
         $httpAuth = new HttpAuth([
             'accept_schemes' => 'basic',
-            'realm' => 'My Web Site',
+            'realm'          => 'My Web Site',
             'digest_domains' => '/',
-            'nonce_timeout' => 3600,
+            'nonce_timeout'  => 3600,
         ]);
         $httpAuth->setBasicResolver(new HttpAuth\ApacheResolver(__DIR__ . '/../TestAsset/htpasswd'));
 
         $adapter = new HttpAdapter($httpAuth, $this->authentication);
 
         $this->request->getHeaders()->addHeaderLine('Authorization: Basic dXNlcjp1c2Vy');
-        $result  = $adapter->authenticate($this->request, $this->response, $this->event);
+        $result = $adapter->authenticate($this->request, $this->response, $this->event);
         $this->assertInstanceOf(AuthenticatedIdentity::class, $result);
     }
 }

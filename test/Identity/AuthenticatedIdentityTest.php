@@ -10,12 +10,12 @@ use PHPUnit\Framework\TestCase;
 
 class AuthenticatedIdentityTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         $this->authIdentity = (object) [
             'name' => 'foo',
         ];
-        $this->identity = new AuthenticatedIdentity($this->authIdentity);
+        $this->identity     = new AuthenticatedIdentity($this->authIdentity);
     }
 
     public function testAuthenticatedIsAnIdentityType()

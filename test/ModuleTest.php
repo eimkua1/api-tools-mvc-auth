@@ -26,12 +26,20 @@ use Laminas\Mvc\Service\ServiceManagerConfig;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use ReflectionMethod;
+use ReflectionProperty;
+
+use function method_exists;
 
 class ModuleTest extends TestCase
 {
     use EventListenerIntrospectionTrait;
+    use ProphecyTrait;
 
+    /**
+     * @return Application
+     */
     protected function createApplication(ServiceManager $services, EventManagerInterface $events)
     {
         $r = new ReflectionMethod(Application::class, '__construct');
@@ -44,6 +52,9 @@ class ModuleTest extends TestCase
         return new Application($services, $events);
     }
 
+    /**
+     * @return ServiceManager
+     */
     protected function createServiceManager(array $config)
     {
         if (method_exists(ServiceManager::class, 'configure')) { // v3
@@ -59,20 +70,27 @@ class ModuleTest extends TestCase
     public function testOnBootstrapReturnsEarlyForNonHttpEvents()
     {
         $mvcEvent = $this->prophesize(MvcEvent::class);
-        $module = new Module();
+        $module   = new Module();
 
         $request = $this->prophesize(RequestInterface::class)->reveal();
         $mvcEvent->getRequest()->willReturn($request);
         $module->onBootstrap($mvcEvent->reveal());
 
-        $this->assertAttributeEmpty('container', $module);
+        $containerProperty = new ReflectionProperty($module, 'container');
+        $containerProperty->setAccessible(true);
+        $actualContainer = $containerProperty->getValue($module);
+
+        $this->assertEmpty($actualContainer);
     }
 
+    /**
+     * @return array[]
+     */
     public function expectedListeners()
     {
-        $module = new Module();
-        $config = $module->getConfig();
-        $request = $this->prophesize(Request::class)->reveal();
+        $module   = new Module();
+        $config   = $module->getConfig();
+        $request  = $this->prophesize(Request::class)->reveal();
         $response = $this->prophesize(Response::class)->reveal();
 
         $services = $this->createServiceManager($config);
@@ -108,6 +126,8 @@ class ModuleTest extends TestCase
     }
 
     /**
+     * @param int $priority
+     * @param string $event
      * @dataProvider expectedListeners
      */
     public function testOnBootstrapAttachesListeners(callable $listener, $priority, $event, EventManager $events)

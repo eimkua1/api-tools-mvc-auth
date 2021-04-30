@@ -18,13 +18,19 @@ use OAuth2\Server as OAuth2Server;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
+use function class_exists;
+use function sprintf;
+
 class OAuth2ServerFactoryTest extends TestCase
 {
+    /**
+     * @return array[]
+     */
     protected function getOAuth2Options()
     {
         return [
             'api-tools-oauth2' => [
-                'grant_types' => [
+                'grant_types'                => [
                     'client_credentials' => true,
                     'authorization_code' => true,
                     'password'           => true,
@@ -36,6 +42,10 @@ class OAuth2ServerFactoryTest extends TestCase
         ];
     }
 
+    /**
+     * @param ServiceManager $services
+     * @return ServiceManager
+     */
     protected function mockConfig($services)
     {
         $services->setService('config', $this->getOAuth2Options());
@@ -45,7 +55,7 @@ class OAuth2ServerFactoryTest extends TestCase
     public function testRaisesExceptionIfAdapterIsMissing()
     {
         $services = $this->mockConfig(new ServiceManager());
-        $config = [
+        $config   = [
             'dsn' => 'sqlite::memory:',
         ];
 
@@ -58,8 +68,8 @@ class OAuth2ServerFactoryTest extends TestCase
     public function testRaisesExceptionCreatingPdoBackedServerIfDsnIsMissing()
     {
         $services = $this->mockConfig(new ServiceManager());
-        $config = [
-            'adapter' => 'pdo',
+        $config   = [
+            'adapter'  => 'pdo',
             'username' => 'username',
             'password' => 'password',
         ];
@@ -73,11 +83,11 @@ class OAuth2ServerFactoryTest extends TestCase
     public function testCanCreatePdoAdapterBackedServer()
     {
         $services = $this->mockConfig(new ServiceManager());
-        $config = [
+        $config   = [
             'adapter' => 'pdo',
-            'dsn' => 'sqlite::memory:',
+            'dsn'     => 'sqlite::memory:',
         ];
-        $server = OAuth2ServerFactory::factory($config, $services);
+        $server   = OAuth2ServerFactory::factory($config, $services);
         $this->assertInstanceOf(OAuth2Server::class, $server);
     }
 
@@ -87,14 +97,14 @@ class OAuth2ServerFactoryTest extends TestCase
             $this->markTestSkipped('Mongo extension is required for this test');
         }
 
-        $services = $this->mockConfig(new ServiceManager());
+        $services    = $this->mockConfig(new ServiceManager());
         $mongoClient = $this->getMockBuilder(MongoDB::class)
             ->disableOriginalConstructor(true)
             ->getMock();
         $services->setService('MongoService', $mongoClient);
 
         $config = [
-            'adapter' => 'mongo',
+            'adapter'      => 'mongo',
             'locator_name' => 'MongoService',
         ];
         $server = OAuth2ServerFactory::factory($config, $services);
@@ -104,7 +114,7 @@ class OAuth2ServerFactoryTest extends TestCase
     public function testRaisesExceptionCreatingMongoBackedServerIfDatabaseIsMissing()
     {
         $services = $this->mockConfig(new ServiceManager());
-        $config = [
+        $config   = [
             'adapter' => 'mongo',
         ];
 
@@ -121,14 +131,17 @@ class OAuth2ServerFactoryTest extends TestCase
         }
 
         $services = $this->mockConfig(new ServiceManager());
-        $config = [
-            'adapter' => 'mongo',
+        $config   = [
+            'adapter'  => 'mongo',
             'database' => 'api-tools-mvc-auth-test',
         ];
-        $server = OAuth2ServerFactory::factory($config, $services);
+        $server   = OAuth2ServerFactory::factory($config, $services);
         $this->assertInstanceOf(OAuth2Server::class, $server);
     }
 
+    /**
+     * @return string[][]
+     */
     public function disableGrantType()
     {
         return [
@@ -141,14 +154,15 @@ class OAuth2ServerFactoryTest extends TestCase
     }
 
     /**
+     * @param string $disable
      * @dataProvider disableGrantType
      * @group 77
      */
     public function testServerCreatedHasDefaultGrantTypesAsDefinedByOAuth2Module($disable)
     {
-        $options  = $this->getOAuth2Options();
+        $options                                              = $this->getOAuth2Options();
         $options['api-tools-oauth2']['grant_types'][$disable] = false;
-        $options['api-tools-oauth2']['storage_settings'] = [
+        $options['api-tools-oauth2']['storage_settings']      = [
             'client_table'        => 'CLIENTS',
             'code_table'          => 'AUTHORIZATION_CODES',
             'user_table'          => 'USERS',
@@ -161,7 +175,7 @@ class OAuth2ServerFactoryTest extends TestCase
 
         $config = [
             'adapter' => 'pdo',
-            'dsn' => 'sqlite::memory:',
+            'dsn'     => 'sqlite::memory:',
         ];
         $server = OAuth2ServerFactory::factory($config, $services);
         $this->assertInstanceOf(OAuth2Server::class, $server);
@@ -211,7 +225,7 @@ class OAuth2ServerFactoryTest extends TestCase
         // Now verify that storage settings are also merged in, which was the
         // original issue.
         $storage = $server->getStorage('scope');
-        $r = new ReflectionProperty($storage, 'config');
+        $r       = new ReflectionProperty($storage, 'config');
         $r->setAccessible(true);
         $storageConfig = $r->getValue($storage);
         foreach ($options['api-tools-oauth2']['storage_settings'] as $key => $value) {
@@ -222,9 +236,9 @@ class OAuth2ServerFactoryTest extends TestCase
 
     public function testAllowsUsingOpenIDConnectGrantTypeViaConfiguration()
     {
-        $options  = $this->getOAuth2Options();
+        $options = $this->getOAuth2Options();
         $options['api-tools-oauth2']['options']['use_openid_connect'] = true;
-        $options['api-tools-oauth2']['storage_settings'] = [
+        $options['api-tools-oauth2']['storage_settings']              = [
             'client_table'        => 'CLIENTS',
             'code_table'          => 'AUTHORIZATION_CODES',
             'user_table'          => 'USERS',
@@ -237,7 +251,7 @@ class OAuth2ServerFactoryTest extends TestCase
 
         $config = [
             'adapter' => 'pdo',
-            'dsn' => 'sqlite::memory:',
+            'dsn'     => 'sqlite::memory:',
         ];
         $server = OAuth2ServerFactory::factory($config, $services);
         $this->assertInstanceOf(OAuth2Server::class, $server);

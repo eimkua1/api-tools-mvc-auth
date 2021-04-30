@@ -15,7 +15,6 @@ interface AuthorizationInterface
     /**
      * Whether or not the given identity has the given privilege on the given resource.
      *
-     * @param IdentityInterface $identity
      * @param mixed $resource
      * @param mixed $privilege
      * @return bool

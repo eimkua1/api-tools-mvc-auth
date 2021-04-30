@@ -21,12 +21,11 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
     /**
      * Create an object
      *
-     * @param ContainerInterface $container
      * @param string             $requestedName
      * @param null|array         $options
      * @return HttpAuth
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         // If no configuration present, nothing to create
         if (! $container->has('config')) {
@@ -48,7 +47,6 @@ class DefaultAuthHttpAdapterFactory implements FactoryInterface
      *
      * Provided for backwards compatibility; proxies to __invoke().
      *
-     * @param ServiceLocatorInterface $container
      * @return HttpAuth
      */
     public function createService(ServiceLocatorInterface $container)

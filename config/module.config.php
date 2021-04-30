@@ -10,15 +10,16 @@ namespace Laminas\ApiTools\MvcAuth;
 
 use Laminas\Authentication\Storage\NonPersistent;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use ZF\MvcAuth\Identity\IdentityPlugin;
 
 return [
     'controller_plugins' => [
-        'aliases' => [
+        'aliases'   => [
             'getidentity' => Identity\IdentityPlugin::class,
             'getIdentity' => Identity\IdentityPlugin::class,
 
             // Legacy Zend Framework aliases
-            \ZF\MvcAuth\Identity\IdentityPlugin::class => Identity\IdentityPlugin::class,
+            IdentityPlugin::class => Identity\IdentityPlugin::class,
         ],
         'factories' => [
             Identity\IdentityPlugin::class => InvokableFactory::class,
@@ -53,7 +54,7 @@ return [
         ],
         // @codingStandardsIgnoreEnd
     ],
-    'api-tools-mvc-auth'        => [
+    'api-tools-mvc-auth' => [
         'authentication' => [
             /* First, we define authentication configuration types. These have
              * the keys:

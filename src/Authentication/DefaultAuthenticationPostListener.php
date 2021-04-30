@@ -16,8 +16,7 @@ class DefaultAuthenticationPostListener
     /**
      * Determine if we have an authentication failure, and, if so, return a 401 response
      *
-     * @param MvcAuthEvent $mvcAuthEvent
-     * @return null|\Laminas\Http\Response
+     * @return null|HttpResponse
      */
     public function __invoke(MvcAuthEvent $mvcAuthEvent)
     {

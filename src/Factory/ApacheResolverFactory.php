@@ -19,12 +19,11 @@ class ApacheResolverFactory implements FactoryInterface
      *
      * If appropriate configuration is not found, returns boolean false.
      *
-     * @param ContainerInterface $container
      * @param string $requestedName
      * @param null|array $options
      * @return false|ApacheResolver
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
     {
         if (false === $container->has('config')) {
             return false;
@@ -46,7 +45,6 @@ class ApacheResolverFactory implements FactoryInterface
      *
      * Exists for backwards compatibility only; proxies to __invoke().
      *
-     * @param  ServiceLocatorInterface $container
      * @return false|ApacheResolver
      */
     public function createService(ServiceLocatorInterface $container)
